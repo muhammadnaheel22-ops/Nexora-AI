@@ -447,8 +447,3 @@ Developer
 
 Nexora AI — Multi-Agent AI Platform
 
----
-
-## ⚠️ Disclaimer
-
-AI-generated outputs can be imperfect. Important facts, code, and decisions should be independently reviewed before production use.
