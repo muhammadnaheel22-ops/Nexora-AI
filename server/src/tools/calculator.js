@@ -1,0 +1,2 @@
+import { evaluate } from "mathjs";
+export const calculatorTool={name:"calculator",description:"Evaluate a mathematical expression without executing JavaScript or shell commands.",async execute({expression}){const safe=String(expression??"").trim();if(!safe||safe.length>500)throw new Error("Invalid calculator expression");const value=evaluate(safe);if(typeof value==="function")throw new Error("Functions are not valid calculator results");return{expression:safe,result:String(value)}}};

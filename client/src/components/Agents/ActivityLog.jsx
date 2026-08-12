@@ -1,0 +1,9 @@
+import { ChevronDown, ChevronRight } from "lucide-react";
+import { useState } from "react";
+const labels = { core: "Nexora Core", scout: "Nexora Scout", logic: "Nexora Logic", forge: "Nexora Forge", scribe: "Nexora Scribe", sentinel: "Nexora Sentinel", memory: "Nexora Memory" };
+function EventRow({ event }) {
+  const [expanded, setExpanded] = useState(false);
+  const hasDetails = event.data && Object.keys(event.data).length > 0;
+  return <div className="rounded-lg border border-zinc-200/70 p-2.5 dark:border-zinc-800"><button type="button" className="flex w-full items-start gap-2 text-left" onClick={() => hasDetails && setExpanded((v) => !v)}><span className="mt-0.5 shrink-0 text-zinc-500">{new Date(event.createdAt || Date.now()).toLocaleTimeString([], { hour12: false })}</span><span className="min-w-0 flex-1"><b>{labels[event.agent] || event.agent || "System"}</b> · {event.message}</span>{hasDetails && (expanded ? <ChevronDown size={14}/> : <ChevronRight size={14}/>)}</button>{expanded && <pre className="mt-2 max-h-52 overflow-auto whitespace-pre-wrap rounded-lg bg-zinc-100 p-2 text-[10px] leading-4 text-zinc-600 dark:bg-zinc-900 dark:text-zinc-400">{JSON.stringify(event.data, null, 2)}</pre>}</div>;
+}
+export default function ActivityLog({ events = [] }) { const [open, setOpen] = useState(true); return <div className="rounded-xl border border-zinc-200 dark:border-zinc-800"><button type="button" onClick={() => setOpen((v) => !v)} className="flex w-full items-center justify-between px-3 py-3 text-sm font-medium"><span>Agent Activity</span>{open ? <ChevronDown size={16}/> : <ChevronRight size={16}/>}</button>{open && <div className="max-h-80 space-y-2 overflow-auto border-t border-zinc-200 p-3 text-xs dark:border-zinc-800">{events.length ? events.map((event, index) => <EventRow key={event.id || index} event={event}/>) : <div className="text-zinc-500">No agent activity yet.</div>}</div>}</div>; }

@@ -1,0 +1,21 @@
+node_modules/
+client/node_modules/
+server/node_modules/
+client/dist/
+coverage/
+*.log
+.DS_Store
+
+# Secrets
+.env
+.env.*
+!.env.example
+!client/.env.example
+!server/.env.example
+
+# Local user files and development vector store
+server/uploads/
+server/.nexora-vector-store/
+uploads/
+.nexora-vector-store/
+

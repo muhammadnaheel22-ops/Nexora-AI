@@ -1,0 +1,40 @@
+NEXORA AI - SIMPLE MYSQL EDITION
+================================
+
+1) Install Node.js 20+ and MySQL 8+.
+
+2) Open the project in VS Code.
+
+3) Open VS Code Terminal and run:
+   npm install
+
+4) Create the server environment file:
+   Copy-Item .\server\.env.example .\server\.env
+
+5) Open server/.env and check this line:
+   DATABASE_URL=mysql://nexora:nexora_dev_password@127.0.0.1:3306/nexora_ai
+
+   If you use your own MySQL username/password, change it there.
+
+6) Put a long JWT secret in server/.env:
+   JWT_SECRET=change-this-to-a-random-string-at-least-32-characters-long
+
+7) OPTIONAL for AI chat: put your API key in:
+   AI_API_KEY=YOUR_KEY
+
+8) If you use the included Docker MySQL, start it:
+   docker compose up -d mysql
+
+9) Create the SQL tables:
+   npm run db:init
+
+10) Start the app:
+    npm run dev
+
+11) Open:
+    http://localhost:5173
+
+12) Backend health check:
+    http://localhost:4000/api/health
+
+If AI chat gives an error, read the backend terminal. The service now shows a clear provider error for invalid key, wrong model, quota, or endpoint problems.
