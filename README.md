@@ -134,8 +134,8 @@ Nexora Core dynamically selects the required specialists, so every request does 
                      SQL       │        │ AI API
                                ▼        ▼
                     ┌──────────────┐  ┌──────────────┐
-                    │ Aiven MySQL  │  │   Groq API   │
-                    │   Database   │  │ AI Inference │
+                    │ TiDB Cloud   │  │   Groq API   │
+                    │ MySQ Database│  │ AI Inference │
                     └──────────────┘  └──────────────┘
 ```
 
@@ -294,17 +294,17 @@ The production deployment uses separate services for the frontend, backend, data
 |---|---|
 | Frontend | Vercel |
 | Backend API | Render |
-| Database | Aiven MySQL |
+| Database | TiDB Cloud MySQL |
 | AI Provider | Groq |
 | Source Control | GitHub |
 
 ---
 
-## 1. Database — Aiven MySQL
+## 1. Database — TiDB Cloud Starter MySQL
 
-Create a managed MySQL service on Aiven.
+Create a managed MySQL service on TiDB Cloud .
 
-Configure the Render backend with the Aiven connection URI:
+Configure the Render backend with the TiDB Cloud connection URI:
 
 ```env
 DATABASE_URL=mysql://USERNAME:PASSWORD@HOST:PORT/DATABASE
@@ -439,7 +439,7 @@ Developer
     └──────── HTTPS ───────────┤
                                │
                                ▼
-                         Aiven MySQL
+                         TiDB Cloud MySQL
 ```
 ## 👨‍💻 Author
 
