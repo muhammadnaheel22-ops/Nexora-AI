@@ -1,0 +1,4 @@
+name = "nexora-ai"
+main = "server/src/server.js"
+compatibility_date = "2026-08-13"
+compatibility_flags = ["nodejs_compat"]
