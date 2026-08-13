@@ -19,7 +19,7 @@ import chatRoutes from "./routes/chatRoutes.js";
 import memoryRoutes from "./routes/memoryRoutes.js";
 import settingsRoutes from "./routes/settingsRoutes.js";
 
-export const app = express();
+const app = express();
 
 /*
 |--------------------------------------------------------------------------
@@ -246,3 +246,20 @@ app.use(notFound);
 */
 
 app.use(errorHandler);
+
+/*
+|--------------------------------------------------------------------------
+| Exports
+|--------------------------------------------------------------------------
+|
+| Default export:
+| Used by Vercel to invoke the Express application.
+|
+| Named export:
+| Keeps compatibility with src/server.js:
+| import { app } from "./app.js";
+|
+*/
+
+export { app };
+export default app;
