@@ -1,33 +1,42 @@
-import mysql from "mysql2/promise";
+import pg from "pg";
 import { env } from "./config.js";
 
-const databaseUrl = new URL(env.DATABASE_URL);
-export const pool = mysql.createPool({
-  host: databaseUrl.hostname,
-  port: Number(databaseUrl.port || 3306),
-  user: decodeURIComponent(databaseUrl.username),
-  password: decodeURIComponent(databaseUrl.password),
-  database: databaseUrl.pathname.slice(1),
-  waitForConnections: true,
-  connectionLimit: 10,
-  decimalNumbers: true,
+const { Pool } = pg;
+
+export const pool = new Pool({
+  connectionString: env.DATABASE_URL,
+  max: 10,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 10000,
 });
 
-export async function query(sql, params = []) {
-  const [rows] = await pool.execute(sql, params);
-  return rows;
+function postgresSql(sql) {
+  let index = 0;
+  return sql.replace(/\?/g, () => `$${++index}`);
 }
+
+export async function query(sql, params = []) {
+  const result = await pool.query(postgresSql(sql), params);
+  return result.rows;
+}
+
 export async function transaction(work) {
-  const connection = await pool.getConnection();
+  const client = await pool.connect();
   try {
-    await connection.beginTransaction();
+    await client.query("BEGIN");
+    const connection = {
+      execute: async (sql, params = []) => {
+        const result = await client.query(postgresSql(sql), params);
+        return [{ insertId: result.rows[0]?.id, rows: result.rows, rowCount: result.rowCount }];
+      },
+    };
     const result = await work(connection);
-    await connection.commit();
+    await client.query("COMMIT");
     return result;
   } catch (error) {
-    await connection.rollback();
+    await client.query("ROLLBACK");
     throw error;
   } finally {
-    connection.release();
+    client.release();
   }
 }

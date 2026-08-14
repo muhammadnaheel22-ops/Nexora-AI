@@ -8,3 +8,6 @@ coverage/
 !client/.env.example
 !server/.env.example
 server/uploads/
+
+.vercel
+.env*

@@ -5,7 +5,7 @@ import { pool, query } from "./db.js";
 try {
   await query("SELECT 1");
 } catch (error) {
-  console.error(`Unable to connect to MySQL (${error.code || error.message}). Start MySQL and run npm run db:init.`);
+  console.error(`Unable to connect to PostgreSQL (${error.code || error.message}). Check DATABASE_URL and run npm run db:init.`);
   process.exit(1);
 }
 

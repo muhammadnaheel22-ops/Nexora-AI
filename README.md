@@ -1,6 +1,6 @@
 # Nexora AI
 
-Nexora AI is a clean, local-first multi-agent workspace rebuilt from zero with React, Express, and MySQL.
+Nexora AI is a clean, local-first multi-agent workspace rebuilt from zero with React, Express, and PostgreSQL.
 
 ## Features
 
@@ -16,7 +16,7 @@ Nexora AI is a clean, local-first multi-agent workspace rebuilt from zero with R
 ## Requirements
 
 - Node.js 20+
-- MySQL 8+
+- PostgreSQL 15+ or a Neon database
 
 ## Local setup
 
@@ -32,7 +32,7 @@ Open [http://localhost:5173](http://localhost:5173). The API health endpoint is 
 The default local database connection is:
 
 ```env
-DATABASE_URL=mysql://nexora:nexora_dev_password@127.0.0.1:3306/nexora_rebuilt
+DATABASE_URL=postgresql://nexora:nexora_dev_password@127.0.0.1:5432/nexora_rebuilt
 ```
 
 Leave `OPENROUTER_API_KEY` empty to use local response mode. Add your OpenRouter key to `server/.env` to enable live AI responses. The default model is `openai/gpt-5-mini` through `https://openrouter.ai/api/v1`.
@@ -51,6 +51,6 @@ npm.cmd run db:init
 
 ```text
 client/  React + Vite application
-server/  Express API + MySQL persistence
+server/  Express API + PostgreSQL/Neon persistence
 scripts/ Cross-platform development launcher
 ```

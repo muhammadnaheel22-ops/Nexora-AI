@@ -11,7 +11,7 @@ const asyncRoute = (handler) => (req, res, next) => Promise.resolve(handler(req,
 const credentials = z.object({ email: z.string().email().max(254), password: z.string().min(8).max(128) });
 const publicUser = (user) => ({ id: Number(user.id), name: user.name, email: user.email, role: user.role });
 
-router.get("/health", (_req, res) => res.json({ status: "ok", service: "nexora-api", database: "mysql", version: "2.0.0" }));
+router.get("/health", (_req, res) => res.json({ status: "ok", service: "nexora-api", database: "postgresql", version: "2.1.0" }));
 
 router.post("/auth/register", asyncRoute(async (req, res) => {
   const input = credentials.extend({ name: z.string().trim().min(2).max(100) }).parse(req.body);
@@ -20,7 +20,7 @@ router.post("/auth/register", asyncRoute(async (req, res) => {
   if (existing.length) return res.status(409).json({ error: { message: "Email is already registered" } });
   const hash = await bcrypt.hash(input.password, 12);
   const user = await transaction(async (connection) => {
-    const [result] = await connection.execute("INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)", [input.name, email, hash]);
+    const [result] = await connection.execute("INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?) RETURNING id", [input.name, email, hash]);
     await connection.execute("INSERT INTO user_settings (user_id, ai_model) VALUES (?, ?)", [result.insertId, env.AI_MODEL]);
     return { id: result.insertId, name: input.name, email, role: "user" };
   });
@@ -46,14 +46,14 @@ router.get("/auth/me", requireAuth, asyncRoute(async (req, res) => {
 router.use(requireAuth, requireCsrf);
 
 router.get("/conversations", asyncRoute(async (req, res) => {
-  const rows = await query("SELECT id, title, created_at AS createdAt, updated_at AS updatedAt FROM conversations WHERE user_id = ? ORDER BY updated_at DESC", [req.user.id]);
+  const rows = await query('SELECT id, title, created_at AS "createdAt", updated_at AS "updatedAt" FROM conversations WHERE user_id = ? ORDER BY updated_at DESC', [req.user.id]);
   res.json({ conversations: rows });
 }));
 
 router.get("/conversations/:id/messages", asyncRoute(async (req, res) => {
   const owners = await query("SELECT id FROM conversations WHERE id = ? AND user_id = ?", [req.params.id, req.user.id]);
   if (!owners.length) return res.status(404).json({ error: { message: "Conversation not found" } });
-  const messages = await query("SELECT id, role, content, created_at AS createdAt FROM messages WHERE conversation_id = ? ORDER BY id", [req.params.id]);
+  const messages = await query('SELECT id, role, content, created_at AS "createdAt" FROM messages WHERE conversation_id = ? ORDER BY id', [req.params.id]);
   return res.json({ messages });
 }));
 
@@ -69,18 +69,18 @@ router.post("/chat", asyncRoute(async (req, res) => {
     const owned = await query("SELECT id FROM conversations WHERE id = ? AND user_id = ?", [conversationId, req.user.id]);
     if (!owned.length) return res.status(404).json({ error: { message: "Conversation not found" } });
   } else {
-    const result = await query("INSERT INTO conversations (user_id, title) VALUES (?, ?)", [req.user.id, input.message.slice(0, 80)]);
-    conversationId = result.insertId;
+    const result = await query("INSERT INTO conversations (user_id, title) VALUES (?, ?) RETURNING id", [req.user.id, input.message.slice(0, 80)]);
+    conversationId = result[0].id;
   }
   const history = await query("SELECT role, content FROM messages WHERE conversation_id = ? ORDER BY id DESC LIMIT 12", [conversationId]);
   await query("INSERT INTO messages (conversation_id, role, content) VALUES (?, 'user', ?)", [conversationId, input.message]);
   await query("INSERT INTO agent_events (user_id, conversation_id, agent, status, detail) VALUES (?, ?, 'Nexora Core', 'running', 'Preparing response')", [req.user.id, conversationId]);
   try {
     const reply = await generateReply({ message: input.message, history: history.reverse() });
-    const result = await query("INSERT INTO messages (conversation_id, role, content) VALUES (?, 'assistant', ?)", [conversationId, reply]);
+    const result = await query("INSERT INTO messages (conversation_id, role, content) VALUES (?, 'assistant', ?) RETURNING id", [conversationId, reply]);
     await query("UPDATE conversations SET updated_at = CURRENT_TIMESTAMP WHERE id = ?", [conversationId]);
     await query("INSERT INTO agent_events (user_id, conversation_id, agent, status, detail) VALUES (?, ?, 'Nexora Core', 'completed', 'Response delivered')", [req.user.id, conversationId]);
-    return res.json({ conversationId, message: { id: result.insertId, role: "assistant", content: reply } });
+    return res.json({ conversationId: Number(conversationId), message: { id: Number(result[0].id), role: "assistant", content: reply } });
   } catch (error) {
     await query("INSERT INTO agent_events (user_id, conversation_id, agent, status, detail) VALUES (?, ?, 'Nexora Core', 'failed', ?)", [req.user.id, conversationId, error.message.slice(0, 255)]);
     throw error;
@@ -92,10 +92,10 @@ router.get("/dashboard", asyncRoute(async (req, res) => {
     query("SELECT COUNT(*) AS value FROM conversations WHERE user_id = ?", [req.user.id]),
     query("SELECT COUNT(*) AS value FROM messages m JOIN conversations c ON c.id = m.conversation_id WHERE c.user_id = ?", [req.user.id]),
     query("SELECT COUNT(*) AS value FROM documents WHERE user_id = ?", [req.user.id]),
-    query("SELECT id, title, updated_at AS updatedAt FROM conversations WHERE user_id = ? ORDER BY updated_at DESC LIMIT 5", [req.user.id]),
+    query('SELECT id, title, updated_at AS "updatedAt" FROM conversations WHERE user_id = ? ORDER BY updated_at DESC LIMIT 5', [req.user.id]),
     query("SELECT agent, status, COUNT(*) AS value FROM agent_events WHERE user_id = ? GROUP BY agent, status", [req.user.id]),
   ]);
-  res.json({ metrics: { conversations: conversationCount.value, messages: messageCount.value, documents: documentCount.value }, recent, agents });
+  res.json({ metrics: { conversations: Number(conversationCount.value), messages: Number(messageCount.value), documents: Number(documentCount.value) }, recent, agents: agents.map((agent) => ({ ...agent, value: Number(agent.value) })) });
 }));
 
 const team = [
@@ -109,20 +109,20 @@ const team = [
 ].map(([name, role, description]) => ({ name, role, description }));
 
 router.get("/agents", asyncRoute(async (req, res) => {
-  const events = await query("SELECT id, agent, status, detail, created_at AS createdAt FROM agent_events WHERE user_id = ? ORDER BY id DESC LIMIT 30", [req.user.id]);
+  const events = await query('SELECT id, agent, status, detail, created_at AS "createdAt" FROM agent_events WHERE user_id = ? ORDER BY id DESC LIMIT 30', [req.user.id]);
   res.json({ team, events });
 }));
 
 router.get("/documents", asyncRoute(async (req, res) => {
-  const documents = await query("SELECT id, name, mime_type AS mimeType, size_bytes AS sizeBytes, created_at AS createdAt FROM documents WHERE user_id = ? ORDER BY id DESC", [req.user.id]);
+  const documents = await query('SELECT id, name, mime_type AS "mimeType", size_bytes AS "sizeBytes", created_at AS "createdAt" FROM documents WHERE user_id = ? ORDER BY id DESC', [req.user.id]);
   res.json({ documents });
 }));
 
 router.post("/documents", asyncRoute(async (req, res) => {
   const input = z.object({ name: z.string().trim().min(1).max(255), content: z.string().max(500000), mimeType: z.string().max(120).default("text/plain") }).parse(req.body);
   const size = Buffer.byteLength(input.content, "utf8");
-  const result = await query("INSERT INTO documents (user_id, name, mime_type, size_bytes, content) VALUES (?, ?, ?, ?, ?)", [req.user.id, input.name, input.mimeType, size, input.content]);
-  res.status(201).json({ document: { id: result.insertId, name: input.name, mimeType: input.mimeType, sizeBytes: size } });
+  const result = await query("INSERT INTO documents (user_id, name, mime_type, size_bytes, content) VALUES (?, ?, ?, ?, ?) RETURNING id", [req.user.id, input.name, input.mimeType, size, input.content]);
+  res.status(201).json({ document: { id: Number(result[0].id), name: input.name, mimeType: input.mimeType, sizeBytes: size } });
 }));
 
 router.delete("/documents/:id", asyncRoute(async (req, res) => {
@@ -131,12 +131,12 @@ router.delete("/documents/:id", asyncRoute(async (req, res) => {
 }));
 
 router.get("/settings", asyncRoute(async (req, res) => {
-  const rows = await query("SELECT theme, ai_model AS aiModel, system_prompt AS systemPrompt FROM user_settings WHERE user_id = ?", [req.user.id]);
+  const rows = await query('SELECT theme, ai_model AS "aiModel", system_prompt AS "systemPrompt" FROM user_settings WHERE user_id = ?', [req.user.id]);
   res.json({ settings: rows[0] || { theme: "dark", aiModel: env.AI_MODEL, systemPrompt: "" } });
 }));
 
 router.put("/settings", asyncRoute(async (req, res) => {
   const input = z.object({ theme: z.enum(["dark", "light", "system"]), aiModel: z.string().trim().min(1).max(100), systemPrompt: z.string().max(5000).default("") }).parse(req.body);
-  await query("INSERT INTO user_settings (user_id, theme, ai_model, system_prompt) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE theme = VALUES(theme), ai_model = VALUES(ai_model), system_prompt = VALUES(system_prompt)", [req.user.id, input.theme, input.aiModel, input.systemPrompt]);
+  await query("INSERT INTO user_settings (user_id, theme, ai_model, system_prompt) VALUES (?, ?, ?, ?) ON CONFLICT (user_id) DO UPDATE SET theme = EXCLUDED.theme, ai_model = EXCLUDED.ai_model, system_prompt = EXCLUDED.system_prompt, updated_at = CURRENT_TIMESTAMP", [req.user.id, input.theme, input.aiModel, input.systemPrompt]);
   res.json({ settings: input });
 }));
