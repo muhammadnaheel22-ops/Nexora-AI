@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { createElement, useEffect, useState } from "react";
 import {
   Activity,
   BrainCircuit,
@@ -44,7 +44,7 @@ export default function DashboardPage() {
               <div className="metric-card" key={key}>
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-zinc-500">{label}</span>
-                  <Icon size={16} className="text-violet-500" />
+                  {createElement(Icon, { size: 16, className: "text-violet-500" })}
                 </div>
                 <div className="mt-3 text-2xl font-semibold">
                   {key === "averageResponseTimeMs"
