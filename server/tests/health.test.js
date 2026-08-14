@@ -6,6 +6,6 @@ describe("health", () => {
   it("describes the rebuilt service", async () => {
     const response = await request(app).get("/api/health");
     expect(response.status).toBe(200);
-    expect(response.body).toMatchObject({ status: "ok", database: "mysql", version: "2.0.0" });
+    expect(response.body).toMatchObject({ status: "ok", database: "postgresql", version: "2.1.0" });
   });
 });
