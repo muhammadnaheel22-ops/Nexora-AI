@@ -2,6 +2,12 @@
 
 Nexora AI is a clean, local-first multi-agent workspace rebuilt from zero with React, Express, and PostgreSQL.
 
+## Live deployment
+
+[Open Nexora AI on Vercel](https://nexora-ai-pi-indol.vercel.app)
+
+The production frontend is live. API-backed features require the server environment variables to be configured in Vercel.
+
 ## Features
 
 - Secure cookie authentication with CSRF protection
