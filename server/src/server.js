@@ -1,23 +1,20 @@
 import { app } from "./app.js";
-import { connectDatabase, disconnectDatabase } from "./config/database.js";
-import { env } from "./config/env.js";
-import { logger } from "./config/logger.js";
-import { ensureAgentConfigs } from "./services/agentConfigService.js";
+import { env } from "./config.js";
+import { pool, query } from "./db.js";
 
-await connectDatabase();
-await ensureAgentConfigs();
+try {
+  await query("SELECT 1");
+} catch (error) {
+  console.error(`Unable to connect to MySQL (${error.code || error.message}). Start MySQL and run npm run db:init.`);
+  process.exit(1);
+}
 
-const server = app.listen(env.PORT, () => {
-  logger.info({ port: env.PORT }, "Nexora API listening");
-});
-
-async function shutdown(signal) {
-  logger.info({ signal }, "Shutting down");
+const server = app.listen(env.PORT, () => console.log(`Nexora API listening on http://localhost:${env.PORT}`));
+async function shutdown() {
   server.close(async () => {
-    await disconnectDatabase().catch(() => {});
+    await pool.end();
     process.exit(0);
   });
 }
-
-process.on("SIGINT", () => shutdown("SIGINT"));
-process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", shutdown);
+process.on("SIGTERM", shutdown);

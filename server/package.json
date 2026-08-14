@@ -1,35 +1,26 @@
 {
   "name": "nexora-server",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
   "type": "module",
   "engines": { "node": ">=20" },
   "scripts": {
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
-    "build": "node --check src/server.js && node --check src/services/workflowService.js && node --check src/services/aiService.js",
+    "build": "node --check src/server.js && node --check src/app.js && node --check src/routes.js",
     "lint": "eslint src tests",
-    "test": "vitest run",
-    "db:init": "node src/scripts/initDb.js",
-    "seed": "node src/scripts/seed.js"
+    "test": "vitest run --configLoader runner",
+    "db:init": "node src/init-db.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
-    "csv-parse": "^5.6.0",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
-    "express-rate-limit": "^8.0.1",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
-    "mammoth": "^1.9.1",
-    "mathjs": "^14.6.0",
-    "multer": "^2.0.2",
     "mysql2": "^3.23.2",
-    "pdf-parse": "^1.1.1",
-    "pino": "^9.7.0",
-    "pino-http": "^10.5.0",
     "zod": "^4.0.14"
   },
   "devDependencies": {

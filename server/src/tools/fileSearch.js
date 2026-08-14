@@ -1,2 +1,0 @@
-import { retrieveContext } from "../services/ragService.js";
-export const fileSearchTool={name:"fileSearch",description:"Retrieve relevant passages from the authenticated user's uploaded documents.",async execute({query,documentIds=[],topK=6},ctx,signal){return{results:await retrieveContext({userId:ctx.userId,query:String(query),documentIds:Array.isArray(documentIds)?documentIds:[],topK:Math.min(Math.max(Number(topK)||6,1),10),signal})}}};

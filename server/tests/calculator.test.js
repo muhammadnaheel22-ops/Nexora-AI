@@ -1,1 +1,0 @@
-import{describe,it,expect}from"vitest";import{calculatorTool}from"../src/tools/calculator.js";describe("calculator tool",()=>{it("evaluates arithmetic",async()=>{expect((await calculatorTool.execute({expression:"(12+8)*3"})).result).toBe("60")})});
