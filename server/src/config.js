@@ -20,3 +20,8 @@ if (!parsed.success) {
 }
 
 export const env = parsed.data;
+
+export const databaseUrl = env.DATABASE_URL.replace(
+  /([?&])sslmode=(?:prefer|require|verify-ca)(?=&|$)/,
+  "$1sslmode=verify-full",
+);
