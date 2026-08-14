@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 
-import { query, transaction } from "../config/database.js";
+import { query } from "../config/database.js";
 
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { AppError } from "../utils/errors.js";

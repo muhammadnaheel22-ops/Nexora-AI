@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import { query, transaction, connectDatabase, disconnectDatabase } from "../config/database.js";
+import { transaction, connectDatabase, disconnectDatabase } from "../config/database.js";
 import { ensureAgentConfigs } from "../services/agentConfigService.js";
 
 async function seedAdmin() {

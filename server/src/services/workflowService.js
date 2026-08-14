@@ -1,6 +1,6 @@
 import { query, transaction } from "../config/database.js";
 import { env } from "../config/env.js";
-import { AGENT, agentDisplay, agentDbValue } from "../agents/names.js";
+import { agentDisplay, agentDbValue } from "../agents/names.js";
 import { getConversationMemory, getLongTermMemory } from "./memoryService.js";
 import { setWorkflowState, persistAndEmit } from "./workflowEventService.js";
 import { withTimeout } from "../utils/timeout.js";
@@ -158,7 +158,7 @@ function draftFrom(plan, results) {
   return JSON.stringify(Object.fromEntries(results), null, 2);
 }
 
-async function review({ workflowRunId, conversationId, userRequest, results, draft, emit, signal, attempt }) {
+async function review({ workflowRunId, conversationId, userRequest, results, draft, signal, attempt }) {
   const task = await createTask({
     workflowRunId,
     conversationId,
