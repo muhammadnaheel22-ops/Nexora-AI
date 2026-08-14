@@ -1,1 +1,0 @@
-import{Moon,Sun}from"lucide-react";import{useTheme}from"../../context/ThemeContext.jsx";export default function ThemeToggle(){const{theme,toggle}=useTheme();return <button onClick={toggle} className="icon-btn" aria-label="Toggle theme">{theme==="dark"?<Sun size={17}/>:<Moon size={17}/>}</button>}

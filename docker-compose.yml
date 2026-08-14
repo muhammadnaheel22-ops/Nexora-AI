@@ -1,25 +1,20 @@
 services:
   mysql:
     image: mysql:8.4
-    container_name: nexora-mysql
-    restart: unless-stopped
-    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     environment:
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-nexora_ai}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-nexora_rebuilt}
       MYSQL_USER: ${MYSQL_USER:-nexora}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:-nexora_dev_password}
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-change_this_root_password}
     ports:
       - "${MYSQL_PORT:-3306}:3306"
     volumes:
-      - nexora_mysql_data:/var/lib/mysql
+      - nexora_rebuilt_data:/var/lib/mysql
     healthcheck:
       test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
-      interval: 10s
+      interval: 5s
       timeout: 5s
-      retries: 10
-      start_period: 20s
+      retries: 20
 
 volumes:
-  nexora_mysql_data:
-    name: nexora_mysql_data
+  nexora_rebuilt_data:

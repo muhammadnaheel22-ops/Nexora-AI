@@ -1,112 +1,12 @@
+import { Bot, FileText, MessageSquare, MessagesSquare } from "lucide-react";
 import { createElement, useEffect, useState } from "react";
-import {
-  Activity,
-  BrainCircuit,
-  CheckCircle2,
-  Clock,
-  FileText,
-  MessageSquare,
-  RefreshCw,
-  Wrench,
-  XCircle,
-  Zap
-} from "lucide-react";
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import AppLayout from "../components/UI/AppLayout.jsx";
-import { api } from "../services/api.js";
+import Shell from "../components/Shell.jsx";
+import Loading from "../components/Loading.jsx";
+import { api } from "../api.js";
 
-const cards = [
-  ["totalConversations", "Conversations", MessageSquare],
-  ["totalTasks", "Agent tasks", BrainCircuit],
-  ["successfulTasks", "Successful", CheckCircle2],
-  ["failedTasks", "Failed", XCircle],
-  ["agentsUsed", "Agents used", Zap],
-  ["documents", "Documents", FileText],
-  ["tokenUsage", "Token usage", Activity],
-  ["averageResponseTimeMs", "Avg response", Clock]
-];
-
+const metrics = [["conversations", "Conversations", MessageSquare], ["messages", "Messages", MessagesSquare], ["documents", "Documents", FileText]];
 export default function DashboardPage() {
-  const [data, setData] = useState(null);
-  useEffect(() => {
-    api.get("/dashboard").then((response) => setData(response.data));
-  }, []);
-
-  return (
-    <AppLayout>
-      <main className="h-full overflow-auto p-5 lg:p-8">
-        <div className="mx-auto max-w-7xl">
-          <h1 className="text-2xl font-semibold">Dashboard</h1>
-          <p className="mt-1 text-sm text-zinc-500">Operational visibility across your AI team.</p>
-
-          <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            {cards.map(([key, label, Icon]) => (
-              <div className="metric-card" key={key}>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-zinc-500">{label}</span>
-                  {createElement(Icon, { size: 16, className: "text-violet-500" })}
-                </div>
-                <div className="mt-3 text-2xl font-semibold">
-                  {key === "averageResponseTimeMs"
-                    ? `${Math.round((data?.metrics?.[key] || 0) / 1000)}s`
-                    : (data?.metrics?.[key] || 0).toLocaleString()}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <div className="metric-card">
-              <div className="flex items-center gap-2 text-xs text-zinc-500"><Wrench size={14} /> Tool calls</div>
-              <div className="mt-2 text-xl font-semibold">{data?.observability?.toolCalls || 0}</div>
-            </div>
-            <div className="metric-card">
-              <div className="flex items-center gap-2 text-xs text-zinc-500"><Clock size={14} /> Avg tool latency</div>
-              <div className="mt-2 text-xl font-semibold">{data?.observability?.averageToolLatencyMs || 0} ms</div>
-            </div>
-            <div className="metric-card">
-              <div className="flex items-center gap-2 text-xs text-zinc-500"><RefreshCw size={14} /> Retries</div>
-              <div className="mt-2 text-xl font-semibold">{data?.observability?.retries || 0}</div>
-            </div>
-            <div className="metric-card">
-              <div className="flex items-center gap-2 text-xs text-zinc-500"><XCircle size={14} /> Error events</div>
-              <div className="mt-2 text-xl font-semibold">{data?.observability?.errorEvents || 0}</div>
-            </div>
-          </div>
-
-          <div className="mt-6 grid gap-5 xl:grid-cols-2">
-            <div className="panel">
-              <h2 className="panel-title">Agent performance</h2>
-              <div className="h-72">
-                <ResponsiveContainer>
-                  <BarChart data={data?.agentStats || []}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                    <XAxis dataKey="displayName" interval={0} angle={-15} textAnchor="end" height={55} />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="tasks" fill="#8b5cf6" radius={[6, 6, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-
-            <div className="panel">
-              <h2 className="panel-title">Recent workflows</h2>
-              <div className="space-y-2">
-                {data?.recentRuns?.map((run) => (
-                  <div key={run.id} className="flex items-center justify-between rounded-xl border border-zinc-200 p-3 dark:border-zinc-800">
-                    <div className="min-w-0">
-                      <div className="truncate text-sm font-medium">{run.userRequest}</div>
-                      <div className="mt-1 text-xs text-zinc-500">{new Date(run.createdAt).toLocaleString()}</div>
-                    </div>
-                    <span className="status-pill">{run.state}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </main>
-    </AppLayout>
-  );
+  const [data, setData] = useState(null); const [error, setError] = useState("");
+  useEffect(() => { api("/dashboard").then(setData).catch((caught) => setError(caught.message)); }, []);
+  return <Shell><div className="page"><header className="page-header"><div><span className="eyebrow">Overview</span><h1>Dashboard</h1><p>Activity across your Nexora workspace.</p></div></header>{error ? <div className="alert">{error}</div> : null}{!data ? <Loading /> : <><section className="metric-grid">{metrics.map(([key, label, Icon]) => <article className="metric" key={key}><span>{createElement(Icon, { size: 20 })}</span><small>{label}</small><strong>{Number(data.metrics[key] || 0).toLocaleString()}</strong></article>)}</section><section className="dashboard-grid"><article className="surface"><div className="section-title"><div><span className="eyebrow">Recent</span><h2>Conversations</h2></div></div>{data.recent.length ? data.recent.map((item) => <div className="list-row" key={item.id}><span className="row-icon"><MessageSquare size={16} /></span><div><strong>{item.title}</strong><small>{new Date(item.updatedAt).toLocaleString()}</small></div></div>) : <p className="muted">Start a conversation to see activity here.</p>}</article><article className="surface"><div className="section-title"><div><span className="eyebrow">Execution</span><h2>Agent activity</h2></div></div>{data.agents.length ? data.agents.map((item) => <div className="list-row" key={`${item.agent}-${item.status}`}><span className="row-icon"><Bot size={16} /></span><div><strong>{item.agent}</strong><small>{item.status}</small></div><b>{item.value}</b></div>) : <p className="muted">Agent events appear after your first message.</p>}</article></section></>}</div></Shell>;
 }

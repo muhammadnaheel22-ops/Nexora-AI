@@ -1,17 +1,14 @@
 {
-  "name": "nexora-ai-simple-mysql",
-  "version": "1.0.0",
+  "name": "nexora-ai",
+  "version": "2.0.0",
   "private": true,
   "type": "module",
-  "workspaces": [
-    "client",
-    "server"
-  ],
+  "workspaces": ["client", "server"],
   "scripts": {
     "dev": "node scripts/dev.js",
     "build": "npm run build -w server && npm run build -w client",
+    "lint": "npm run lint -w server && npm run lint -w client",
     "test": "npm run test -w server && npm run test -w client",
-    "db:init": "npm run db:init -w server",
-    "seed": "npm run seed -w server"
+    "db:init": "npm run db:init -w server"
   }
 }

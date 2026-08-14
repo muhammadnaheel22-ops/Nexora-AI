@@ -1,37 +1,28 @@
 import { spawn } from "node:child_process";
 
-function start(name, cwd) {
-  console.log(`Starting ${name}...`);
+const isWindows = process.platform === "win32";
 
-  const child = spawn("npm run dev", {
-    cwd,
-    stdio: "inherit",
-    shell: true,
-  });
-
-  child.on("error", (error) => {
-    console.error(`${name} failed to start:`, error.message);
-  });
-
-  child.on("exit", (code) => {
-    if (code !== 0 && code !== null) {
-      console.error(`${name} stopped with code ${code}`);
-    }
-  });
-
-  return child;
+function startWorkspace(cwd) {
+  const command = isWindows ? process.env.ComSpec ?? "C:\\Windows\\System32\\cmd.exe" : "npm";
+  const args = isWindows ? ["/d", "/s", "/c", "npm.cmd run dev"] : ["run", "dev"];
+  return spawn(command, args, { cwd, stdio: "inherit" });
 }
 
-const server = start("Nexora Backend", "./server");
-const client = start("Nexora Frontend", "./client");
+const children = [startWorkspace("server"), startWorkspace("client")];
 
+let shuttingDown = false;
 function shutdown() {
-  console.log("\nStopping Nexora AI...");
+  if (shuttingDown) return;
+  shuttingDown = true;
+  for (const child of children) child.kill("SIGTERM");
+  setTimeout(() => process.exit(0), 250).unref();
+}
 
-  server.kill();
-  client.kill();
-
-  process.exit(0);
+for (const child of children) {
+  child.on("error", (error) => {
+    console.error("Unable to start development process:", error.message);
+    shutdown();
+  });
 }
 
 process.on("SIGINT", shutdown);

@@ -1,449 +1,56 @@
-# 🤖 Nexora AI
+# Nexora AI
 
-### Production-Ready Multi-Agent AI Platform
+Nexora AI is a clean, local-first multi-agent workspace rebuilt from zero with React, Express, and MySQL.
 
-Nexora AI is a full-stack multi-agent AI platform that orchestrates specialized AI agents to research, reason, build, review, and generate high-quality responses through intelligent workflows.
+## Features
 
-It combines a modern React interface, Node.js backend, MySQL persistence, Groq-powered AI inference, document-aware context, and real-time agent execution.
-
----
-
-## ✨ Features
-
-- 🤖 Multi-agent AI orchestration
-- 💬 Real-time streaming AI chat
-- 🧠 Intelligent task planning
-- 🔍 Research and evidence gathering
-- ⚙️ Technical analysis and code generation
-- 📝 AI-assisted writing
-- 🛡️ Automated quality review
-- 💾 Persistent conversation history
-- 📂 Document-aware AI / RAG support
-- 🔐 JWT authentication
-- 🛡️ CSRF protection
-- 📊 AI workflow visualization
-- 🌙 Modern responsive UI
-- 🗄️ MySQL persistent storage
-- ⚡ Groq-powered AI inference
-
----
-
-## 🧠 Multi-Agent Architecture
-
-Nexora AI uses specialized agents instead of relying on a single AI assistant.
-
-| Agent | Responsibility |
-|---|---|
-| **Nexora Core** | Plans and orchestrates AI workflows |
-| **Nexora Scout** | Research and evidence collection |
-| **Nexora Logic** | Analysis, comparisons and reasoning |
-| **Nexora Forge** | Coding, debugging and technical solutions |
-| **Nexora Scribe** | Reports, summaries and polished responses |
-| **Nexora Memory** | Context and document retrieval |
-| **Nexora Sentinel** | Quality assurance and response review |
-
-### Workflow
-
-```text
-                         User Request
-                              │
-                              ▼
-                        Nexora Core
-                        Orchestrator
-                              │
-              ┌───────────────┼───────────────┐
-              ▼               ▼               ▼
-         Nexora Scout    Nexora Logic    Nexora Forge
-          Research        Analysis        Technical
-              │               │               │
-              └───────────────┼───────────────┘
-                              ▼
-                        Nexora Scribe
-                              │
-                              ▼
-                       Nexora Sentinel
-                         QA / Review
-                              │
-                              ▼
-                         Final Response
-```
-
-Nexora Core dynamically selects the required specialists, so every request does not need to execute every agent.
-
----
-
-## 🛠️ Tech Stack
-
-### Frontend
-
-- React
-- Vite
-- Tailwind CSS
-- Lucide React
-
-### Backend
-
-- Node.js
-- Express.js
-- REST API
-- Server-Sent Events (SSE)
-
-### Database
-
-- MySQL 8+
-- `mysql2/promise`
-- Parameterized SQL queries
-
-### AI
-
-- Groq API
-- OpenAI-compatible Chat Completions API
-- Structured AI responses
-- Streaming responses
-- Multi-agent orchestration
-
-### Security
-
-- JWT authentication
-- HTTP cookies
-- CSRF protection
-- Rate limiting
-- Input validation
-
----
-
-## 🏗️ System Architecture
-
-```text
-                         ┌───────────────────┐
-                         │       User        │
-                         └─────────┬─────────┘
-                                   │
-                                   ▼
-                         ┌───────────────────┐
-                         │  Vercel Frontend  │
-                         │   React + Vite    │
-                         └─────────┬─────────┘
-                                   │ HTTPS
-                                   ▼
-                         ┌───────────────────┐
-                         │  Render Backend   │
-                         │  Node + Express   │
-                         └─────┬────────┬────┘
-                               │        │
-                     SQL       │        │ AI API
-                               ▼        ▼
-                    ┌──────────────┐  ┌──────────────┐
-                    │ TiDB Cloud   │  │   Groq API   │
-                    │ MySQ Database│  │ AI Inference │
-                    └──────────────┘  └──────────────┘
-```
-
----
-
-## 📁 Project Structure
-
-```text
-Nexora-AI/
-│
-├── client/                 # React + Vite frontend
-├── server/                 # Node.js + Express backend
-│   ├── database/           # Database schema
-│   ├── src/
-│   │   ├── agents/         # Multi-agent system
-│   │   ├── config/         # Application configuration
-│   │   ├── routes/         # API routes
-│   │   ├── services/       # Business and AI services
-│   │   └── utils/          # Shared utilities
-│   └── .env.example
-│
-├── scripts/
-├── docker-compose.yml
-├── package.json
-└── README.md
-```
-
----
-
-# 💻 Local Development
+- Secure cookie authentication with CSRF protection
+- Persistent conversations and messages
+- OpenRouter chat with a useful offline/local mode
+- Seven-agent team overview and activity log
+- Dashboard metrics
+- Text document library
+- Per-user workspace settings
+- Responsive, route-split React interface
 
 ## Requirements
 
-Before starting, install:
-
 - Node.js 20+
-- npm
-- Docker Desktop or MySQL 8+
-- Groq API key
+- MySQL 8+
 
----
+## Local setup
 
-## 1. Clone Repository
-
-```bash
-git clone https://github.com/muhammadnaheel22-ops/Nexora-AI.git
-
-cd Nexora-AI
-```
-
----
-
-## 2. Install Dependencies
-
-```bash
+```powershell
 npm install
+Copy-Item server/.env.example server/.env
+npm.cmd run db:init
+npm.cmd run dev
 ```
 
----
+Open [http://localhost:5173](http://localhost:5173). The API health endpoint is [http://localhost:4000/api/health](http://localhost:4000/api/health).
 
-## 3. Configure Backend Environment
-
-Copy:
-
-```text
-server/.env.example
-```
-
-to:
-
-```text
-server/.env
-```
-
-Configure your local environment variables.
-
-Example:
+The default local database connection is:
 
 ```env
-NODE_ENV=development
-
-PORT=4000
-
-DATABASE_URL=mysql://USERNAME:PASSWORD@127.0.0.1:3306/nexora_ai
-
-JWT_SECRET=YOUR_SECURE_SECRET
-
-AI_API_KEY=YOUR_GROQ_API_KEY
-
-AI_BASE_URL=https://api.groq.com/openai/v1
-
-AI_MODEL=YOUR_GROQ_MODEL
-
-CORS_ORIGIN=http://localhost:5173
+DATABASE_URL=mysql://nexora:nexora_dev_password@127.0.0.1:3306/nexora_rebuilt
 ```
 
-Never commit `server/.env` to GitHub.
+Leave `OPENROUTER_API_KEY` empty to use local response mode. Add your OpenRouter key to `server/.env` to enable live AI responses. The default model is `openai/gpt-5-mini` through `https://openrouter.ai/api/v1`.
 
----
+## Commands
 
-## 4. Start MySQL
-
-When using Docker:
-
-```bash
-docker compose up -d mysql
+```powershell
+npm.cmd run dev
+npm.cmd run build
+npm.cmd run lint
+npm.cmd test
+npm.cmd run db:init
 ```
 
----
-
-## 5. Initialize Database
-
-```bash
-npm run db:init
-```
-
-Database schema:
+## Architecture
 
 ```text
-server/database/schema.sql
+client/  React + Vite application
+server/  Express API + MySQL persistence
+scripts/ Cross-platform development launcher
 ```
-
----
-
-## 6. Start Development Environment
-
-```bash
-npm run dev
-```
-
-Frontend:
-
-```text
-http://localhost:5173
-```
-
-Backend:
-
-```text
-http://localhost:4000
-```
-
-Backend health check:
-
-```text
-http://localhost:4000/api/health
-```
-
----
-
-# 🚀 Production Deployment
-
-The production deployment uses separate services for the frontend, backend, database, and AI provider.
-
-| Component | Platform |
-|---|---|
-| Frontend | Vercel |
-| Backend API | Render |
-| Database | TiDB Cloud MySQL |
-| AI Provider | Groq |
-| Source Control | GitHub |
-
----
-
-## 1. Database — TiDB Cloud Starter MySQL
-
-Create a managed MySQL service on TiDB Cloud .
-
-Configure the Render backend with the TiDB Cloud connection URI:
-
-```env
-DATABASE_URL=mysql://USERNAME:PASSWORD@HOST:PORT/DATABASE
-```
-
-Initialize the production database using:
-
-```text
-server/database/schema.sql
-```
-
----
-
-## 2. Backend — Render
-
-Deploy the Node.js/Express backend to Render.
-
-Recommended configuration:
-
-```text
-Root Directory: server
-Build Command: npm install
-Start Command: npm start
-```
-
-Configure production environment variables:
-
-```env
-NODE_ENV=production
-
-DATABASE_URL=YOUR_AIVEN_MYSQL_URL
-
-JWT_SECRET=YOUR_PRODUCTION_JWT_SECRET
-
-AI_API_KEY=YOUR_GROQ_API_KEY
-
-AI_BASE_URL=https://api.groq.com/openai/v1
-
-AI_MODEL=YOUR_GROQ_MODEL
-
-CORS_ORIGIN=https://YOUR-VERCEL-DOMAIN.vercel.app
-```
-
-Example backend URL:
-
-```text
-https://YOUR-RENDER-SERVICE.onrender.com
-```
-
-Health check:
-
-```text
-https://YOUR-RENDER-SERVICE.onrender.com/api/health
-```
-
----
-
-## 3. Frontend — Vercel
-
-Deploy the `client` application to Vercel.
-
-Configuration:
-
-```text
-Framework: Vite
-Root Directory: client
-Build Command: npm run build
-Output Directory: dist
-```
-
-Configure:
-
-```env
-VITE_API_URL=https://YOUR-RENDER-SERVICE.onrender.com/api
-```
-
-Example production URL:
-
-```text
-https://YOUR-PROJECT.vercel.app
-```
-
----
-
-## 4. Production CORS
-
-After receiving your Vercel URL, update the Render environment variable:
-
-```env
-CORS_ORIGIN=https://YOUR-PROJECT.vercel.app
-```
-
-Restart or redeploy the backend after changing it.
-
----
-
-## 🔐 Environment & Security
-
-Never commit any of the following:
-
-```text
-.env
-server/.env
-API keys
-JWT secrets
-database passwords
-production credentials
-```
-
-Keep secrets in the environment-variable settings provided by Render, Vercel, and other production services.
-
----
-
-## 🗺️ Deployment Flow
-
-```text
-Developer
-    │
-    │ git push
-    ▼
- GitHub
-    │
-    ├──────────────────────────┐
-    │                          │
-    ▼                          ▼
- Vercel                      Render
- Frontend                    Backend
-    │                          │
-    │                          ├──────────► Groq
-    │                          │             AI
-    │                          │
-    └──────── HTTPS ───────────┤
-                               │
-                               ▼
-                         TiDB Cloud MySQL
-```
-## 👨‍💻 Author
-
-**Muhammad Naheel**
-
-Nexora AI — Multi-Agent AI Platform
-
