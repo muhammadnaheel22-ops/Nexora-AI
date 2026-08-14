@@ -1,4 +1,4 @@
-# Nexora AI
+# Nexora-AI
 
 Nexora AI is a clean, local-first multi-agent workspace rebuilt from zero with React, Express, and PostgreSQL.
 
