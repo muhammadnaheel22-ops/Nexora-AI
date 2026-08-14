@@ -10,6 +10,12 @@ export const router = Router();
 const asyncRoute = (handler) => (req, res, next) => Promise.resolve(handler(req, res, next)).catch(next);
 const credentials = z.object({ email: z.string().email().max(254), password: z.string().min(8).max(128) });
 const publicUser = (user) => ({ id: Number(user.id), name: user.name, email: user.email, role: user.role });
+const requireAdmin = asyncRoute(async (req, res, next) => {
+  const rows = await query("SELECT role FROM users WHERE id = ? LIMIT 1", [req.user.id]);
+  if (rows[0]?.role !== "admin") return res.status(403).json({ error: { message: "Administrator access required" } });
+  req.user.role = "admin";
+  return next();
+});
 
 router.get("/health", (_req, res) => res.json({ status: "ok", service: "nexora-api", database: "postgresql", version: "2.1.0" }));
 
@@ -139,4 +145,40 @@ router.put("/settings", asyncRoute(async (req, res) => {
   const input = z.object({ theme: z.enum(["dark", "light", "system"]), aiModel: z.string().trim().min(1).max(100), systemPrompt: z.string().max(5000).default("") }).parse(req.body);
   await query("INSERT INTO user_settings (user_id, theme, ai_model, system_prompt) VALUES (?, ?, ?, ?) ON CONFLICT (user_id) DO UPDATE SET theme = EXCLUDED.theme, ai_model = EXCLUDED.ai_model, system_prompt = EXCLUDED.system_prompt, updated_at = CURRENT_TIMESTAMP", [req.user.id, input.theme, input.aiModel, input.systemPrompt]);
   res.json({ settings: input });
+}));
+
+router.use("/admin", requireAdmin);
+
+router.get("/admin/overview", asyncRoute(async (req, res) => {
+  const [metricsRows, users] = await Promise.all([
+    query(`SELECT
+      (SELECT COUNT(*) FROM users)::int AS users,
+      (SELECT COUNT(*) FROM users WHERE role = 'admin')::int AS admins,
+      (SELECT COUNT(*) FROM conversations)::int AS conversations,
+      (SELECT COUNT(*) FROM messages)::int AS messages,
+      (SELECT COUNT(*) FROM documents)::int AS documents`),
+    query(`SELECT u.id, u.name, u.email, u.role, u.created_at AS "createdAt",
+      (SELECT COUNT(*) FROM conversations c WHERE c.user_id = u.id)::int AS conversations,
+      (SELECT COUNT(*) FROM messages m JOIN conversations c ON c.id = m.conversation_id WHERE c.user_id = u.id)::int AS messages,
+      (SELECT COUNT(*) FROM documents d WHERE d.user_id = u.id)::int AS documents
+      FROM users u ORDER BY u.created_at DESC LIMIT 250`),
+  ]);
+  res.json({ currentUserId: req.user.id, metrics: metricsRows[0], users });
+}));
+
+router.patch("/admin/users/:id/role", asyncRoute(async (req, res) => {
+  const targetId = z.coerce.number().int().positive().parse(req.params.id);
+  const { role } = z.object({ role: z.enum(["user", "admin"]) }).parse(req.body);
+  if (targetId === req.user.id) return res.status(400).json({ error: { message: "You cannot change your own administrator role" } });
+  const rows = await query("UPDATE users SET role = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? RETURNING id, name, email, role", [role, targetId]);
+  if (!rows[0]) return res.status(404).json({ error: { message: "User not found" } });
+  return res.json({ user: publicUser(rows[0]) });
+}));
+
+router.delete("/admin/users/:id", asyncRoute(async (req, res) => {
+  const targetId = z.coerce.number().int().positive().parse(req.params.id);
+  if (targetId === req.user.id) return res.status(400).json({ error: { message: "You cannot delete your own administrator account" } });
+  const rows = await query("DELETE FROM users WHERE id = ? RETURNING id", [targetId]);
+  if (!rows[0]) return res.status(404).json({ error: { message: "User not found" } });
+  return res.status(204).end();
 }));

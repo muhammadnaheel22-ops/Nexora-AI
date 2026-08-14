@@ -15,6 +15,7 @@
     { "source": "/dashboard", "destination": "/index.html" },
     { "source": "/agents", "destination": "/index.html" },
     { "source": "/documents", "destination": "/index.html" },
-    { "source": "/settings", "destination": "/index.html" }
+    { "source": "/settings", "destination": "/index.html" },
+    { "source": "/admin", "destination": "/index.html" }
   ]
 }

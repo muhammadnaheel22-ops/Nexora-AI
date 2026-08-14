@@ -1,0 +1,9 @@
+@media (max-width: 1050px) {
+  .admin-metrics { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 760px) {
+  .admin-metrics { grid-template-columns: 1fr; }
+  .admin-toolbar { align-items: stretch; flex-direction: column; }
+  .admin-toolbar input { max-width: none; }
+}
