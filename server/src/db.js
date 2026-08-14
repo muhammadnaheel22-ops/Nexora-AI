@@ -1,10 +1,10 @@
 import pg from "pg";
-import { env } from "./config.js";
+import { databaseUrl } from "./config.js";
 
 const { Pool } = pg;
 
 export const pool = new Pool({
-  connectionString: env.DATABASE_URL,
+  connectionString: databaseUrl,
   max: 10,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 10000,
