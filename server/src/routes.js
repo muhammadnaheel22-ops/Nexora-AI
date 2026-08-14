@@ -4,7 +4,7 @@ import { z } from "zod";
 import { clearSession, requireAuth, requireCsrf, setSession } from "./auth.js";
 import { generateReply } from "./ai.js";
 import { query, transaction } from "./db.js";
-import { env } from "./config.js";
+import { aiModels, availableModels, env } from "./config.js";
 
 export const router = Router();
 const asyncRoute = (handler) => (req, res, next) => Promise.resolve(handler(req, res, next)).catch(next);
@@ -51,6 +51,8 @@ router.get("/auth/me", requireAuth, asyncRoute(async (req, res) => {
 
 router.use(requireAuth, requireCsrf);
 
+router.get("/models", (_req, res) => res.json({ models: availableModels, defaultModel: aiModels[0] }));
+
 router.get("/conversations", asyncRoute(async (req, res) => {
   const rows = await query('SELECT id, title, created_at AS "createdAt", updated_at AS "updatedAt" FROM conversations WHERE user_id = ? ORDER BY updated_at DESC', [req.user.id]);
   res.json({ conversations: rows });
@@ -69,7 +71,11 @@ router.delete("/conversations/:id", asyncRoute(async (req, res) => {
 }));
 
 router.post("/chat", asyncRoute(async (req, res) => {
-  const input = z.object({ conversationId: z.coerce.number().int().positive().optional(), message: z.string().trim().min(1).max(12000) }).parse(req.body);
+  const input = z.object({
+    conversationId: z.coerce.number().int().positive().optional(),
+    message: z.string().trim().min(1).max(12000),
+    model: z.string().refine((value) => aiModels.includes(value), "Model is not available").optional(),
+  }).parse(req.body);
   let conversationId = input.conversationId;
   if (conversationId) {
     const owned = await query("SELECT id FROM conversations WHERE id = ? AND user_id = ?", [conversationId, req.user.id]);
@@ -82,7 +88,7 @@ router.post("/chat", asyncRoute(async (req, res) => {
   await query("INSERT INTO messages (conversation_id, role, content) VALUES (?, 'user', ?)", [conversationId, input.message]);
   await query("INSERT INTO agent_events (user_id, conversation_id, agent, status, detail) VALUES (?, ?, 'Nexora Core', 'running', 'Preparing response')", [req.user.id, conversationId]);
   try {
-    const reply = await generateReply({ message: input.message, history: history.reverse() });
+    const reply = await generateReply({ message: input.message, history: history.reverse(), model: input.model });
     const result = await query("INSERT INTO messages (conversation_id, role, content) VALUES (?, 'assistant', ?) RETURNING id", [conversationId, reply]);
     await query("UPDATE conversations SET updated_at = CURRENT_TIMESTAMP WHERE id = ?", [conversationId]);
     await query("INSERT INTO agent_events (user_id, conversation_id, agent, status, detail) VALUES (?, ?, 'Nexora Core', 'completed', 'Response delivered')", [req.user.id, conversationId]);

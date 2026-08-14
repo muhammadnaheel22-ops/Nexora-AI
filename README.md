@@ -12,7 +12,7 @@ The production frontend is live. API-backed features require the server environm
 
 - Secure cookie authentication with CSRF protection
 - Persistent conversations and messages
-- OpenRouter chat with a useful offline/local mode
+- OpenRouter chat with automatic free-first model fallback and a useful offline/local mode
 - Seven-agent team overview and activity log
 - Dashboard metrics
 - Text document library
@@ -41,7 +41,7 @@ The default local database connection is:
 DATABASE_URL=postgresql://nexora:nexora_dev_password@127.0.0.1:5432/nexora_rebuilt
 ```
 
-Leave `OPENROUTER_API_KEY` empty to use local response mode. Add your OpenRouter key to `server/.env` to enable live AI responses. The default model is `openai/gpt-5-mini` through `https://openrouter.ai/api/v1`.
+Leave `OPENROUTER_API_KEY` empty to use local response mode. Add your OpenRouter key to `server/.env` to enable live AI responses. `AI_MODELS` is a comma-separated fallback chain. Its default order is OpenRouter Free, DeepSeek V4 Flash Latest, Gemini Flash Latest, free GPT-OSS 20B, GPT Mini Latest, and OpenRouter Auto. Nexora preserves that order across groups of three, OpenRouter's per-request fallback limit, and advances to the next group when the current group fails.
 
 ## Commands
 
